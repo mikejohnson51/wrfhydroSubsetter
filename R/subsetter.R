@@ -7,7 +7,7 @@
 #' @export
 #' @importFrom sf st_bbox st_transform st_as_sf as_Spatial
 #' @importFrom raster rowColFromCell cellFromXY cellFromRowCol xyFromCell
-#' @importFrom dplyr filter mutate left_join group_by summarize
+#' @importFrom dplyr filter mutate left_join group_by summarize n
 
 subset_wrf_hydro_domain = function(AOI, domain_files, outDir){
 

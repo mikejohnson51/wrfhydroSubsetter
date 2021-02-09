@@ -41,7 +41,7 @@ easily integrated with existing data science workflows including
 # Aquiring the Domain Files
 
 This approach does not come with out disadvantages, namely that you must
-have the CONUS domain files locally. These files require \~13 GB of disk
+have the CONUS domain files locally. These files require \~17 GB of disk
 space and can be downloaded with `download_conus_nwm` which will go and
 download the most current domain files for you in to a defined
 directory. They will be place is a sub directory name `nwmCONUS-v204`,
@@ -97,6 +97,15 @@ subset_wrf_hydro_domain(AOI = fountainCreek$basin,
 ``` r
 library(raster)
 
+# What did we make?
+list.files(subset_files)
+#> [1] "Fulldom_hires.nc"                    "geo_em.d0x.nc"                      
+#> [3] "GEOGRID_LDASOUT_Spatial_Metadata.nc" "GWBUCKPARM.nc"                      
+#> [5] "hydro2dtbl.nc"                       "Route_Link.nc"                      
+#> [7] "soil_properties.nc"                  "spatialweights.nc"                  
+#> [9] "wrfinput_d0x.nc"
+
+# Looking at the geogrid
 geo  = list.files(subset_files, "geo", full.names = TRUE)
 
 # What variable names are available?
@@ -112,7 +121,7 @@ var_names(geo)
 #> [41] "VAR"        "VAR_SSO"    "XLAT_M"     "XLAT_U"     "XLAT_V"    
 #> [46] "XLONG_M"    "XLONG_U"    "XLONG_V"
 
-# Let extract a raster of the land cover grid
+# Let build a raster from the land cover grid
 r = make_empty_geogrid_raster(geo, var = "LU_INDEX")
 
 {plot(r)

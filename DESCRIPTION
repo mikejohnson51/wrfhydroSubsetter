@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "first.last@example.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Subset WRF-Hydro Domain files for local use.
+Description: Subset WRF-Hydro Domain files for local use. Download NLDAS forcings files.
 License: CC0
 Depends:
     R(>= 3.3.0)

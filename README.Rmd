@@ -36,7 +36,7 @@ As such we aim to create a set of tools that are more flexible, and more easily 
 
 # Aquiring the Domain Files
 
-This approach does not come with out disadvantages, namely that you must have the CONUS domain files locally. These files require ~13 GB of disk space and can be downloaded with `download_conus_nwm` which will go and download the most current domain files for you in to a defined directory. They will be place is a sub directory name `nwmCONUS-v204`, where the vXXX is the version.
+This approach does not come with out disadvantages, namely that you must have the CONUS domain files locally. These files require ~17 GB of disk space and can be downloaded with `download_conus_nwm` which will go and download the most current domain files for you in to a defined directory. They will be place is a sub directory name `nwmCONUS-v204`, where the vXXX is the version.
 
 ```{r}
 library(wrfhydroSubsetter)
@@ -82,12 +82,16 @@ subset_wrf_hydro_domain(AOI = fountainCreek$basin,
 ```{r}
 library(raster)
 
+# What did we make?
+list.files(subset_files)
+
+# Looking at the geogrid
 geo  = list.files(subset_files, "geo", full.names = TRUE)
 
 # What variable names are available?
 var_names(geo)
 
-# Let extract a raster of the land cover grid
+# Let build a raster from the land cover grid
 r = make_empty_geogrid_raster(geo, var = "LU_INDEX")
 
 {plot(r)

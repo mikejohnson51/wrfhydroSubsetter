@@ -12,7 +12,7 @@ latest_nwm_version = function(){
 #' @description Download the domain files (CONUS) used in the most
 #' current operational NWM. It will download
 #' ~17GB of data so plan accordingly!
-#' @details This function will download the follwing national (CONUS) domain
+#' @details This function will download the following national (CONUS) domain
 #'  files for the latest version of the National Water Model on NCEP.
 #' \itemize{
 ##'  \item{"Fulldom_hires_netcdf_1km.nc"}
