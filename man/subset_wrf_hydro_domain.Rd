@@ -4,7 +4,7 @@
 \alias{subset_wrf_hydro_domain}
 \title{WRF-Hydro Subsetter}
 \usage{
-subset_wrf_hydro_domain(AOI, domain_files, outDir)
+subset_wrf_hydro_domain(AOI, domain_files, outDir, config)
 }
 \arguments{
 \item{AOI}{sf POLYGON. The area to cut out}
