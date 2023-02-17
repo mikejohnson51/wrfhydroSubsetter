@@ -83,7 +83,7 @@ for(i in 1:nrow(df)){
 
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
 
-  here = paste0(dir, "/NLDAS2_",df$year[i], df$month[i], df$day[i], df$hour[i], "ttt.nc")
+  here = paste0(dir, "/NLDAS2_",df$year[i], df$month[i], df$day[i], df$hour[i], ".grb")
 
   if(!file.exists(here)){
     httr::GET(df$urls[i], httr::write_disk(here, overwrite = TRUE),
@@ -97,8 +97,8 @@ for(i in 1:nrow(df)){
 }
 
 
-s= stars::read_stars('/Users/mikejohnson/Downloads/force/1991/01/01/NLDAS2_1991010123.grb')
+#s= stars::read_stars('/Users/mikejohnson/Downloads/force/1991/01/01/NLDAS2_1991010123.grb')
 
-plot(s)
+#plot(s)
 
-raster::plot(raster::raster('/Users/mikejohnson/Downloads/force/1991/01/01/NLDAS2_1991010123.nc', var.name = "TMP"))
+#raster::plot(raster::raster('/Users/mikejohnson/Downloads/force/1991/01/01/NLDAS2_1991010123.nc', var.name = "TMP"))

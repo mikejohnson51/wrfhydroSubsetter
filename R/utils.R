@@ -49,15 +49,31 @@ download_conus_nwm = function(outDir = NULL){
                   ver,
                   '/parm/domain')
 
-  needed_files = c("Fulldom_hires_netcdf_1km.nc",
+  needed_files = c("Fulldom_CONUS_FullRouting.nc",
+                   "Fulldom_CONUS_LongRange.nc",
+                   "GEOGRID_LDASOUT_Spatial_Metadata_CONUS.nc",
+                   "GWBUCKPARM_CONUS_FullRouting.nc",
+                   "GWBUCKPARM_CONUS_LongRange.nc",
+                   "RouteLink_CONUS.nc",
+                   "WRF_Hydro_NWM_geospatial_data_template_land_GIS.nc",
                    "geo_em.d01_1km.nc",
-                   "wrfinput_d01_1km.nc",
-                   "RouteLink_NHDPLUS.nc",
-                   "spatialweights_1km_all_basins.nc",
-                   "GWBUCKPARM_CONUS.nc",
-                   "soil_veg_properties_LongRange.nc",
-                   "HYDRO_TBL_2D.nc",
-                   "WRF_Hydro_NWM_geospatial_data_template_land_GIS.nc")
+                   "geo_em_CONUS.nc",
+                   "hydro2dtbl_CONUS_FullRouting.nc",
+                   "hydro2dtbl_CONUS_LongRange.nc",
+                   "nudgingParams_CONUS.nc",
+                   "reservoir_index_AnA.nc",
+                   "reservoir_index_Extended_AnA.nc",
+                   "reservoir_index_Medium_Range.nc",
+                   "reservoir_index_Short_Range.nc",
+                   "reservoir_index_Standard_AnA.nc",
+                   "soilproperties_CONUS_FullRouting.nc",
+                   "soilproperties_CONUS_LongRange.nc",
+                   "spatialweights_CONUS_FullRouting.nc",
+                   "spatialweights_CONUS_LongRange.nc",
+                   "wrfinput_CONUS.nc")
+				   # This list of files were updated by Donny Kim to match the new filenames in repo.
+  
+  
 
   localDir = paste0(outDir, "/nwmCONUS-", gsub("nwm", "", gsub("[.]", "",ver)))
 
@@ -119,6 +135,7 @@ geo_grid_proj = function(path)
 #' @importFrom RNetCDF open.nc dim.inq.nc att.get.nc var.get.nc
 #' @importFrom sf st_point st_sfc st_transform st_coordinates
 #' @importFrom raster raster values
+#' @importFrom magrittr %>%
 
 make_empty_geogrid_raster = function(path, var = NULL)
 {
@@ -230,6 +247,7 @@ read_wt_file = function (wtFile)
 #' @param jstart Start index for the grid in the j (y) direction
 #' @param jend End index for the grid in the j (y) direction
 #' @return List of 2 dataframes
+#' @importFrom magrittr %>%
 #' @export
 
 subset_weights = function (wts, rlids, istart, iend, jstart, jend)
@@ -269,6 +287,16 @@ subset_weights = function (wts, rlids, istart, iend, jstart, jend)
   return(list(wtssubrect, polysub))
 }
 
+
+
+
+#' @title Update the attribute of NetCDF file
+#' @description Update the NetCDF file in path with target dataframe.
+#' @param path Directory of NetCDF file to be updated
+#' @param df R dataframe  of link IDs to keep in the subsetted output
+#' @return Nothing
+#' @export
+#' 
 update_nc = function(path, df){
 
   nc <- RNetCDF::open.nc(path, write = TRUE)

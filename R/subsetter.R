@@ -7,65 +7,103 @@
 #' @export
 #' @importFrom sf st_bbox st_transform st_as_sf as_Spatial
 #' @importFrom raster rowColFromCell cellFromXY cellFromRowCol xyFromCell
+#' @importFrom magrittr %>%
+
 #' @importFrom dplyr filter mutate left_join group_by summarize n
 
-subset_wrf_hydro_domain = function(AOI, domain_files, outDir){
+subset_wrf_hydro_domain = function(AOI, domain_files, outDir, config){
 
   # create the direcotry if does not exist.
   myPath = paste0(outDir, "/")
   dir.create(myPath, showWarnings = FALSE, recursive = TRUE)
 
-#******  Specify the path to the ORIGINAL (full extent) domain files:
-  fullHydFile      <- paste0(domain_files, "/Fulldom_hires_netcdf_1km.nc")
-  fullGeoFile      <- paste0(domain_files, "/geo_em.d01_1km.nc")
-  fullWrfFile      <- paste0(domain_files, "/wrfinput_d01_1km.nc")
-  fullRtlinkFile   <- paste0(domain_files, "/RouteLink_NHDPLUS.nc")
-  fullSpwtFile     <- paste0(domain_files, "/spatialweights_1km_all_basins.nc")
-  fullGwbuckFile   <- paste0(domain_files, "/GWBUCKPARM_CONUS.nc")
-  fullSoilparmFile <- paste0(domain_files, "/soil_veg_properties_LongRange.nc")
-  fullHydro2dFile  <- paste0(domain_files, "/HYDRO_TBL_2D.nc")
-  geoSpatialFile   <- paste0(domain_files, "/WRF_Hydro_NWM_geospatial_data_template_land_GIS.nc")
-
-  coordProj = geo_grid_proj(fullGeoFile)
-
-  # Multiplier between routing grid and LSM grid
+  
+  # Config = 'LongRange' or 'FullRouting'
+  # Multiplier between routing grid and LSM grid (dxy)
   # (e.g., 1-km LSM and 250-m routing means a value of 4)
-  dxy <- 1
-
-  # Specify the NEW (subset extent) domain files:
-  # Routing domain file
-  subHydFile        <- paste0(myPath, "/Fulldom_hires.nc")
-  subGeoFile        <- paste0(myPath, "/geo_em.d0x.nc")
-  subWrfFile        <- paste0(myPath, "/wrfinput_d0x.nc")
-  subRtlinkFile     <- paste0(myPath, "/Route_Link.nc")
-  subSpwtFile       <- paste0(myPath, "/spatialweights.nc")
-  subGwbuckFile     <- paste0(myPath, "/GWBUCKPARM.nc")
-  subSoilparmFile   <- paste0(myPath, "/soil_properties.nc")
-  subHydro2dFile    <- paste0(myPath, "/hydro2dtbl.nc")
-  subGeoSpatialFile <- paste0(myPath, "/GEOGRID_LDASOUT_Spatial_Metadata.nc")
-
-
-  if(
-    all(file.exists(c(subHydFile, subGeoFile,
-                  subWrfFile, subRtlinkFile,
-                  subSpwtFile, subGwbuckFile,
-                  subSoilparmFile, subHydro2dFile,
-                  subGeoSpatialFile)))) {
-   return(myPath)
+  # LongRange dxy = 1, FullRouting dxy =4
+  if (config == 'LongRange'){
+    dxy <- 1
+  } else if (config == 'FullRouting'){
+    dxy <-4
   }
 
+
+  print("DOMAIN files now start loading")
+  #******  Specify the path to the ORIGINAL (full extent) domain files:
+  #From namelist.hrldas
+  fullWrfFile      <- paste0(domain_files, "/wrfinput_CONUS.nc")
+  fullSoilparmFile <- paste0(domain_files, "/soilproperties_CONUS_", config, ".nc")
+  #From hydro.namelist
+  fullGeoFile      <- paste0(domain_files, "/geo_em_CONUS.nc")
+  fullHydFile      <- paste0(domain_files, "/Fulldom_CONUS_", config, ".nc")
+  fullHydro2dFile  <- paste0(domain_files, "/hydro2dtbl_CONUS_", config, ".nc")
+  fullSpatialMeta  <- paste0(domain_files, "/GEOGRID_LDASOUT_Spatial_Metadata_CONUS.nc")
+  fullRtlinkFile   <- paste0(domain_files, "/RouteLink_CONUS.nc")
+  fullLkLinkFile   <- paste0(domain_files, "/LAKEPARM_CONUS.nc") #DhKim
+  fullGwbuckFile   <- paste0(domain_files, "/GWBUCKPARM_CONUS_", config, ".nc")
+  fullSpwtFile     <- paste0(domain_files, "/spatialweights_CONUS_", config, ".nc")
+  fullNudgFile     <- paste0(domain_files, "nudgingParams_CONUS.nc") #DhKim
+  geoSpatialFile   <- paste0(domain_files, "/WRF_Hydro_NWM_geospatial_data_template_land_GIS.nc")
+  
+  coordProj = geo_grid_proj(fullGeoFile)
+  
+  print(paste0("Domain files loaded: ", coordProj))
+  
+  # Specify the NEW (subset extent) domain files:
+  #From namelist.hrldas
+  subWrfFile      <- paste0(myPath, "/wrfinput.nc")
+  subSoilparmFile <- paste0(myPath, "/soilproperties_", config, ".nc")
+  #From hydro.namelist
+  subGeoFile        <- paste0(myPath, "/geo_em.nc")
+  subHydFile        <- paste0(myPath, "/Fulldom_", config, ".nc")
+  subHydro2dFile    <- paste0(myPath, "/hydro2dtbl_", config, ".nc")
+  subSpatialMeta    <- paste0(myPath, "/GEOGRID_LDASOUT_Spatial_Metadata.nc")
+  subRtlinkFile     <- paste0(myPath, "/RouteLink.nc")
+  subLkLinkFile     <- paste0(myPath, "/LAKEPARM.nc") #DhKim
+  subGwbuckFile     <- paste0(myPath, "/GWBUCKPARM_CONUS_", config, ".nc")
+  subSpwtFile       <- paste0(myPath, "/spatialweights_", config, ".nc")
+  subNudgFile       <- paste0(myPath, "nudgingParams.nc") #DhKim
+  subGeoSpatialFile <- paste0(myPath, "/GEOGRID_LDASOUT_Spatial_Metadata.nc")
+  
+  
+  if (config == 'LongRange'){
+    if(
+      all(file.exists(c(subHydFile, subGeoFile,
+                        subWrfFile, subRtlinkFile,
+                        subSpwtFile, subGwbuckFile,
+                        subSoilparmFile, subHydro2dFile,
+                        subGeoSpatialFile)))) {
+      return(myPath)
+    }
+  } else if (config == 'FullRouting'){
+    fullResvFile     <- paste0(domain_files, "/reservoir_index_Short_Range.nc") #DhKim
+    subResvFile       <- paste0(myPath, "/reservoir_index_Short_Range.nc") #DhKim
+    if(
+      all(file.exists(c(subHydFile, subGeoFile,
+                        subWrfFile, subRtlinkFile,
+                        subSpwtFile, subGwbuckFile,
+                        subSoilparmFile, subHydro2dFile,
+                        subGeoSpatialFile,
+                        subLkLinkFile, subResvFile, subNudgFile)))) {
+      return(myPath)
+    }
+  }
+
+  
   # Setup coordinates df
   bb     <- st_bbox(st_transform(AOI, coordProj))
   coords <- data.frame(id=c(1,2,3,4),
                        lat=c(bb$ymin, bb$ymax, bb$ymax, bb$ymin),
                        lon=c( bb$xmin,  bb$xmin, bb$xmax, bb$xmax))
 
+  
   # Generate spatial coords
   bb_pts  = st_as_sf(coords, coords = c("lon", 'lat'), crs = coordProj)
 
   r = make_empty_geogrid_raster(fullGeoFile)
 
-  geoindex <- as.data.frame(raster::rowColFromCell(r, raster::cellFromXY(r, as_Spatial(bb_pts))))
+  geoindex <- as.data.frame(raster::rowColFromCell(r, raster::cellFromXY(r, as_Spatial(bb_pts)))) # DhKim: Questionable...
 
   geoindex$we <- geoindex$col
   geoindex$sn <- nrow(r) - geoindex$row + 1
@@ -94,12 +132,14 @@ subset_wrf_hydro_domain = function(AOI, domain_files, outDir){
     st_transform("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs") %>%
     st_coordinates()
 
+  
 ################# SUBSET DOMAIN Files
   # ROUTING GRID
   if (!is.null(fullHydFile)) {
     if  (!file.exists(fullHydFile)) stop(paste0("The fullHydFile : ", fullHydFile, " does not exits"))
     system(paste0("ncks -O -d x,", hyd_w-1, ",", hyd_e-1, " -d y,", hyd_min-1, ",", hyd_max-1, " ", fullHydFile, " ", subHydFile))
   }
+  print("Processed: subset Fulldom")
 
   # Geo Spatial File
   if (!is.null(geoSpatialFile)) {
@@ -108,7 +148,8 @@ subset_wrf_hydro_domain = function(AOI, domain_files, outDir){
                   geo_e-1, " -d y,", geo_s-1, ",",
                   geo_n-1, " ", geoSpatialFile, " ",
                   subGeoSpatialFile))
-    }
+  }
+  print("Processed: subset geoSpatial")
 
 
   # GEO GRID
@@ -118,6 +159,8 @@ subset_wrf_hydro_domain = function(AOI, domain_files, outDir){
                   " -d west_east_stag,", geo_w-1, ",", geo_e, " -d south_north_stag,",geo_s-1, ",", geo_n, " ",
                   fullGeoFile, " ", subGeoFile))
   }
+  print("Processed: subset GeoGrid")
+  
 
   corner_lats <- c()
 
@@ -155,13 +198,17 @@ subset_wrf_hydro_domain = function(AOI, domain_files, outDir){
   system(paste0("ncatted -h -a j_parent_end,global,o,l,", geo_n-geo_s+2, " ", subGeoFile))
   system(paste0("ncatted -O -a corner_lons,global,o,f,", paste(corner_lons, collapse  = ","), " ", subGeoFile))
   system(paste0("ncatted -O -a corner_lats,global,o,f,", paste(corner_lats, collapse  = ","), " ", subGeoFile))
+  print("Processed: GeoGrid spatial variables reset")
+  
 
   #HYDRO_TBL_2D GRID
   if (!is.null(fullHydro2dFile)) {
     if (!file.exists(fullHydro2dFile)) stop(paste0("The fullHydro2dFile : ", fullHydro2dFile, " does not exits"))
     system(paste0("ncks -O -d west_east,", geo_w-1, ",", geo_e-1, " -d south_north,", geo_s-1, ",", geo_n-1, " ", fullHydro2dFile, " ", subHydro2dFile))
   }
-
+  print("Processed: HYDRO_TBL")
+  
+  
   # WRFINPUT GRID
 
   if (!is.null(fullWrfFile)) {
@@ -170,8 +217,10 @@ subset_wrf_hydro_domain = function(AOI, domain_files, outDir){
     system(paste0("ncatted -h -a WEST-EAST_GRID_DIMENSION,global,o,l,", geo_e-geo_w+2, " ", subWrfFile))
     system(paste0("ncatted -h -a SOUTH-NORTH_GRID_DIMENSION,global,o,l,", geo_n-geo_s+2, " ", subWrfFile))
   }
+  print("Processed: wrfinput")
+  
 
-  ################# SUBSET PARAMS
+  ################# SUBSET PARAMS #DhKim: It is the part where script crashes at May/12/2022. Unresolved.
 if (!file.exists(fullSpwtFile)) stop(paste0("The fullSpwtFile : ", fullSpwtFile, " does not exits"))
 if (!file.exists(fullRtlinkFile)) stop(paste0("The fullRtlinkFile : ", fullRtlinkFile, " does not exits"))
 
@@ -199,18 +248,27 @@ if (!file.exists(fullRtlinkFile)) stop(paste0("The fullRtlinkFile : ", fullRtlin
       dplyr::pull(link)
 
     keepIds <- unique(c(keepIdsPoly, keepIdsLink))
+    if (!is.null(keepIds)){
+      print(paste0("udmap (spatialwt) and links Id match found, total: ", lengths(keepIds)))
+    }
 
-    # SPATIAL WEIGHT
+    
+    # SPATIAL WEIGHT. #DhKim: It is the part where script crashes at May/12/2022. Unresolved.
     subWts = subset_weights(SpatWts, keepIdsPoly, hyd_w, hyd_e, hyd_s, hyd_n)
-
+    print("Processing: spatial weight")
+    
     fs::file_copy(fullSpwtFile, subSpwtFile, overwrite = TRUE)
 
     system(paste0("ncks -O -d polyid,1,", nrow(subWts[[2]]),
                        " -d data,1,", nrow(subWts[[1]]), " ", subSpwtFile, " ",
                      subSpwtFile))
-
-    update_nc(subSpwtFile, subWts[[1]])
-    update_nc(subSpwtFile, subWts[[2]])
+    
+    # DhKim: update_nc seems to be the substitute for "ncatted" ?
+    # DhKim: update_nc file was updated in NAMESPACE (2022/07/25)
+    wrfhydroSubsetter::update_nc(subSpwtFile, subWts[[1]]) #DhKim: I don't know why but failed to find update_nc function
+    wrfhydroSubsetter::update_nc(subSpwtFile, subWts[[2]]) #DhKim: I don't know why but failed to find update_nc function
+    print("Processed: update_nc worked with spatial weights")
+    
 
     # ROUTE LINK
     subRtlink <- dplyr::filter(rt_link, link %in% keepIds) %>%
