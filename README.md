@@ -1,6 +1,8 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+[![DOI](https://zenodo.org/badge/321244116.svg)](https://zenodo.org/badge/latestdoi/321244116)
+
 # TL;DR
 
 Subsetting appropriate domains from the NWM CONUS files is a challenge.
