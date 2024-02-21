@@ -27,8 +27,16 @@ locs = data.frame(comids = c(191739, 1631587, 5894384, 5781369, 19389766, 237626
 
 namelist = c()
 for (i in 1:nrow(locs)){
-  state = st_transform(AOI::aoi_get(state = "all", county = "all"), 4269)[st_transform(findNLDI(comid = locs$comids[i]), crs = 4269),]
-  name = gsub(" ", "-", tolower(paste(state$name, state$state_name, locs$comids[i], locs$siteID[i], sep = "_")))
+  # If you already have comid and want to use it.
+  #state = st_transform(AOI::aoi_get(state = "all", county = "all"), 4269)[st_transform(findNLDI(comid = locs$comids[i]), crs = 4269),]
+  #name = gsub(" ", "-", tolower(paste(state$name, state$state_name, locs$comids[i], locs$siteID[i], sep = "_")))
+  
+  # In case you only have siteID
+  state = st_transform(AOI::aoi_get(state = "all", county = "all"), 4269)[st_transform(findNLDI(nwis = locs$siteID[i]), crs = 4269),] #w10
+  #state = st_transform(AOI::aoi_get(state = "all", county = "all"), 4269)[st_transform(findNLDI(nwis = locs$siteID[i])$origin$geometry, crs = 4269),] #windows10
+  comid_tmp = findNLDI(nwis = locs$siteID[i])$comid
+  #comid_tmp = findNLDI(nwis = locs$siteID[i])$origin$comid #windows10
+  name = gsub(" ", "-", tolower(paste(state$name, state$state_name, comid_tmp, locs$siteID[i], sep = "_")))
   namelist = c(namelist, name)
   rm(name)
   }
@@ -54,3 +62,9 @@ for(i in 1:nrow(locs)){
   subset_sequence(locs$comids[i], locs$siteID[i], FULLDOMAINDIR, outDir, nlcdDir, methodList)
 }
 ### STEP 2 END======================================================================
+
+
+### If not involving any nlcd resampling...
+for(i in 1:nrow(locs)){
+  subset_sequence(locs$comids[i], locs$siteID[i], FULLDOMAINDIR, outDir, nlcdDir=NA, methodList=NA)
+}

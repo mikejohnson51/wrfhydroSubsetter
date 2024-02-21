@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+inst/GeneralPurpose_PQ.R
+inst/GeneralPurpose_ADD.R

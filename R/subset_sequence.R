@@ -16,9 +16,26 @@
 
 subset_sequence = function(comid, siteID, FULLDOMAINDIR, outDir, nlcdDir = NA, methodList = NA){
   
+  tryCatch({
+    ncl_test = system("ncks --version", intern = TRUE)
+    print("NCL installed. Proceeding.")
+  }, error = function(e) {
+    stop("NCL is essential. Please install at: https://www.ncl.ucar.edu/")
+  })
+  
   # Defining the area * This could go out and just stay in the loop.
-  state = st_transform(AOI::aoi_get(state = "all", county = "all"), 4269)[st_transform(findNLDI(comid = comid), crs = 4269),]
+  if (Sys.info()["sysname"] == "Windows"){
+    state = st_transform(AOI::aoi_get(state = "all", county = "all"), 4269)[st_transform(findNLDI(comid = comid)$origin$geometry, crs = 4269),]
+  } else if (Sys.info()["sysname"] == "Linux"){
+    state = st_transform(AOI::aoi_get(state = "all", county = "all"), 4269)[st_transform(findNLDI(comid = comid)$geometry, crs = 4269),]
+  }
+  
   name = gsub(" ", "-", tolower(paste(state$name, state$state_name, comid, siteID, sep = "_")))
+  if (length(name) > 1){
+    name = name[1]
+  }
+  
+  print(name)
   basin = findNLDI(comid = comid, find = c("basin"))$basin
   
   # Subsetting NetCDF DOMAIN files
@@ -27,7 +44,7 @@ subset_sequence = function(comid, siteID, FULLDOMAINDIR, outDir, nlcdDir = NA, m
   
   
   # Resampling sequence
-  if (exists("methodList")==T & exists("nlcdDir")==T) {
+  if (!is.na(methodList) & !is.na("nlcdDir")) {
     
     # Reading in look-up table. This is somewhat problematic at this point.
     data = readxl::read_excel('/mnt/d/GitHub/wrfhydroSubsetter/nwm_land_use_mappings.xlsx') %>%
